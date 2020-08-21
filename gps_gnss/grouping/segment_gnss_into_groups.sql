@@ -12,7 +12,7 @@
 --- ALTER TABLE tablename RENAME tablename TO tablename_old;
 
 --- 3. Create new table like original, but with group_id column
---- CREATE TABLE IF NOT EXISTS tablename ( LIKE tablename_old including all, group_id int)
+--- CREATE TABLE IF NOT EXISTS tablename ( LIKE tablename_old including all, group_id int, ident uuid)
 
 --- 4. Run the code from line 22
 
@@ -76,5 +76,5 @@ select
 from
 	when_new_groups)
 insert into tablename
-select org.*, g.group_id::int FROM tablename_old as org JOIN g ON org.indx = g.idx
+select org.*, g.group_id::int, uuid_in(md5(device_id*random()::text || group_id::text  || random()::cstring) as ident FROM tablename_old as org JOIN g ON org.indx = g.idx
 
