@@ -19,62 +19,78 @@
 --- 5. If succeded, then delete tablename_old
 --- DROP TABLE IF EXIST tablename_old;
 
-with basis as (
-select
-	indx as idx,  -- Point index
-	extract('epoch' from datetime) AS time_in_sec,  -- datetime is timefiled
-	datetime AS datetime,
-	device_id AS device_id,
-	geom AS geom,
-	0 as new_group -- Temporary new group identifier
-FROM
-	tablename -- Table keeping GNSS points
-order by
-	device_id,
-	indx
-), diffs as (
-select
-	idx,
-	time_in_sec-lag(time_in_sec) over(order by device_id,
-	idx) as time_diff,
-	time_in_sec,
-	st_distance(geom::geography, lag(geom::geography) over( order by device_id,
-	idx)) as spatial_dist,
-	datetime,
-	device_id,
-	new_group,
-	LAG(device_id) over(order by device_id,
-	idx) as lag_device_id
-FROM
-	basis
+WITH basis AS (
+    SELECT
+        indx AS idx,  -- Point index
+        extract('epoch' from datetime) AS time_in_sec,  -- datetime is timefiled
+        datetime AS datetime,
+        device_id AS device_id,
+        geom AS geom,
+        0 AS new_group -- Temporary new group identifier
+    FROM
+        tablename_old -- Table keeping GNSS points
+    ORDER BY
+        device_id,
+        indx
+), diffs AS (
+    SELECT
+        idx,
+        time_in_sec-lag(time_in_sec) over(order by device_id,
+        idx) AS time_diff,
+        time_in_sec,
+        st_distance(geom::geography, lag(geom::geography) over( order by device_id,
+        idx)) AS spatial_dist,
+        datetime,
+        device_id,
+        new_group,
+        LAG(device_id) over(order by device_id,
+        idx) AS lag_device_id
+    FROM
+        basis
 ), when_new_groups as (
-select
-	idx,
-	time_diff,
-	spatial_dist,
-	datetime,
-	device_id,
-	/* When to start a new group? */
-    case
-      when
-		lag_device_id <> device_id  -- different device
-        or time_diff > 5*60 -- minutes to seconds
-        or time_diff is null
-        --OR spatial_dist > 300 -- in meters
-        then new_group + 1
-      else 0
-    end as new_group
-from diffs ),
-g as (
-select
-	idx,
-	time_diff,
-	spatial_dist,
-	datetime,
-	device_id,
-	sum(new_group) over (partition by device_id order by device_id asc, datetime asc) as group_id
-from
-	when_new_groups)
-insert into tablename
-select org.*, g.group_id::int, uuid_in(md5(device_id*random()::text || group_id::text  || random()::cstring) as ident FROM tablename_old as org JOIN g ON org.indx = g.idx
+    SELECT
+        idx,
+        time_diff,
+        spatial_dist,
+        datetime,
+        device_id,
+        /* When to start a new group? */
+        CASE
+          WHEN
+            lag_device_id <> device_id  -- different device
+            OR time_diff > 5*60 -- minutes to seconds
+            OR time_diff IS NULL
+            --OR spatial_dist > 300 -- in meters
+            then new_group + 1
+          ELSE 0
+        END AS new_group
+    FROM
+    diffs
+), g AS (
+    SELECT
+        idx,
+        time_diff,
+        spatial_dist,
+        datetime,
+        device_id,
+        sum(new_group) OVER (partition by device_id order by device_id asc, datetime asc) AS group_id
+    FROM
+        when_new_groups
+), g_uuid AS (
+    SELECT
+        uuid_in(md5(g.device_id || g.group_id::text  || random())::cstring) AS ident,
+        device_id,
+        group_id
+    FROM g
+    GROUP BY device_id, group_id
+)
 
+INSERT INTO tablename
+SELECT
+    org.*,
+    g.group_id::int,
+    g_uuid.ident
+FROM
+    tablename_old as org JOIN g
+        ON org.indx = g.idx JOIN g_uuid
+        ON g.device_id = g_uuid.device_id and g.group_id = g_uuid.group_id

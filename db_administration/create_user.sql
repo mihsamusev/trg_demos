@@ -4,7 +4,6 @@
 --- 3. Write the fullname in the comments below
 --- 4. Test access
 
-
 CREATE ROLE username
 WITH PASSWORD 'sikkertp' LOGIN
 VALID UNTIL '2020-12-31' -- Set date at semester end
