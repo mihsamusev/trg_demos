@@ -12,3 +12,16 @@ _Here goes a description of what the research group works with and some basic na
 | gps_gnss  | Set of examples about processing and visualization of GPS/GNSS data |
 | rgb_cam   |                  |
 | lidar     |                  |
+
+### TODO
+from msa:
+- video pre-processing
+    - draw and apply transparent mask on image/video (typical pre-processing step for visual analysis)
+    - calculate and visualize Kanade-Lucas-Tomasi optical flow in video (tracks of corner features used in some visual analysis applications)
+- LIDAR
+    - LIDAR data visualization
+    - LIDAR coordinates to UTM
+- camera calibration
+    - Application of TSAI callibration, from T-Callibration to conversion between 3D coordinates to pixel coordinate
+- ALPR
+    - how to use one of our ALPR pipelines (based on OpenALPR or ALPR-Unconstrained)
