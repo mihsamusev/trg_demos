@@ -9,9 +9,8 @@ _Here goes a description of what the research group works with and some basic na
 
 | Folder    | Description |
 |-----------|------------------|
-| gps_gnss  | Set of examples about processing and visualization of GPS/GNSS data |
-| rgb_cam   |                  |
-| lidar     |                  |
+| [gps_gnss](gps_gnss)  | Set of examples about processing and visualization of GPS/GNSS data |
+
 
 ### TODO
 from msa:
