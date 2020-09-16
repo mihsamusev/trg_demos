@@ -4,7 +4,7 @@ For working with GNSS data, its typical needed to sort them into groups, it coul
 
 | subfolder | task description |
 |-----------|------------------|
-| [grouping](/grouping) | Sort GNSS data into groups and create linestringsZM for each group           |
+| [/grouping](grouping) | Sort GNSS data into groups and create linestringsZM for each group           |
 | `/stuff_1`   |                  |
 | `/thing_2`   |                  |
 
